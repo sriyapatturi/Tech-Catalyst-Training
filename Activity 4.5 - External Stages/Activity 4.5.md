@@ -1,0 +1,241 @@
+# Snowflake Stages
+
+
+
+**Objective**: Learn how to read and load data from three different file formats (CSV, JSON, and Parquet) into Snowflake using `COPY INTO` for bulk loading and `INSERT INTO` for performing data transformations.
+
+### Steps
+
+#### Step 1: Setup Snowflake Environment
+
+1. **Switch to the appropriate role and warehouse:**
+
+   ```sql
+   USE ROLE de;
+   USE WAREHOUSE COMPUTE_WH;
+   ```
+
+2. **Show existing tables, schemas, and stages:**
+
+   ```sql
+   SHOW TABLES;
+   SHOW SCHEMAS;
+   SHOW STAGES;
+   show file formats;
+   ```
+
+3. **Create an external stage pointing to your S3 bucket:**
+
+   ```sql
+   CREATE OR REPLACE STAGE TECHCATALYST_DE.EXTERNAL_STAGE.<YOURINITIAL_STAGE>
+       STORAGE_INTEGRATION = s3_int
+       URL='s3://techcatalyst-public';
+   ```
+
+4. **List files in the stage to confirm availability:**
+
+   ```sql
+   LIST @TECHCATALYST_DE.EXTERNAL_STAGE.<YOURINITIAL_STAGE>;
+   LIST @<YOURINITIAL_STAGE>;
+   LIST @<YOURINITIAL_STAGE> PATTERN='.*csv.*';
+   LIST @<YOURINITIAL_STAGE> PATTERN='.*json.*';
+   ```
+
+5. **Create file formats for JSON, CSV, and Parquet files:**
+
+   ```sql
+   CREATE OR REPLACE FILE FORMAT <YOURINITIAL>_json_format
+   TYPE = 'JSON';
+   
+   CREATE OR REPLACE FILE FORMAT <YOURINITIAL>_csv_format
+   TYPE = 'CSV'
+   FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+   SKIP_HEADER = 1;
+   
+   CREATE OR REPLACE FILE FORMAT <YOURINITIAL>_parquet_format
+   TYPE = 'PARQUET';
+   ```
+
+#### Step 2: Load Data using `COPY INTO`
+
+1. **Create tables to store the data:**
+
+   ```sql
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.YELLOW_TAXI_JSON (
+       VENDORID NUMBER(38,0),
+       TPEP_PICKUP_DATETIME NUMBER(38,0),
+       TPEP_DROPOFF_DATETIME NUMBER(38,0),
+       PASSENGER_COUNT NUMBER(38,0),
+       TRIP_DISTANCE FLOAT,
+       RATECODEID NUMBER(38,0),
+       STORE_AND_FWD_FLAG VARCHAR(16777216),
+       PULOCATIONID NUMBER(38,0),
+       DOLOCATIONID NUMBER(38,0),
+       PAYMENT_TYPE NUMBER(38,0),
+       FARE_AMOUNT FLOAT,
+       EXTRA FLOAT,
+       MTA_TAX FLOAT,
+       TIP_AMOUNT FLOAT,
+       TOLLS_AMOUNT FLOAT,
+       IMPROVEMENT_SURCHARGE FLOAT,
+       TOTAL_AMOUNT FLOAT,
+       CONGESTION_SURCHARGE FLOAT,
+       AIRPORT_FEE FLOAT
+   );
+   
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.YELLOW_TAXI_CSV (
+       VENDORID NUMBER(38,0),
+       TPEP_PICKUP_DATETIME DATETIME,
+       TPEP_DROPOFF_DATETIME DATETIME,
+       PASSENGER_COUNT NUMBER(38,0),
+       TRIP_DISTANCE FLOAT,
+       RATECODEID NUMBER(38,0),
+       STORE_AND_FWD_FLAG VARCHAR(16777216),
+       PULOCATIONID NUMBER(38,0),
+       DOLOCATIONID NUMBER(38,0),
+       PAYMENT_TYPE NUMBER(38,0),
+       FARE_AMOUNT FLOAT,
+       EXTRA FLOAT,
+       MTA_TAX FLOAT,
+       TIP_AMOUNT FLOAT,
+       TOLLS_AMOUNT FLOAT,
+       IMPROVEMENT_SURCHARGE FLOAT,
+       TOTAL_AMOUNT FLOAT,
+       CONGESTION_SURCHARGE FLOAT,
+       AIRPORT_FEE FLOAT
+   );
+   
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.YELLOW_TAXI_PARQUET (
+       VENDORID NUMBER(38,0),
+       TPEP_PICKUP_DATETIME NUMBER(38,0),
+       TPEP_DROPOFF_DATETIME NUMBER(38,0),
+       PASSENGER_COUNT NUMBER(38,0),
+       TRIP_DISTANCE FLOAT,
+       RATECODEID NUMBER(38,0),
+       STORE_AND_FWD_FLAG VARCHAR(16777216),
+       PULOCATIONID NUMBER(38,0),
+       DOLOCATIONID NUMBER(38,0),
+       PAYMENT_TYPE NUMBER(38,0),
+       FARE_AMOUNT FLOAT,
+       EXTRA FLOAT,
+       MTA_TAX FLOAT,
+       TIP_AMOUNT FLOAT,
+       TOLLS_AMOUNT FLOAT,
+       IMPROVEMENT_SURCHARGE FLOAT,
+       TOTAL_AMOUNT FLOAT,
+       CONGESTION_SURCHARGE FLOAT,
+       AIRPORT_FEE FLOAT
+   );
+   ```
+
+2. **Load data from the stage into the tables using `COPY INTO` Into the following tables:** 
+
+   * YELLOW_TAXI_PARQUET
+   * YELLOW_TAXI_CSV
+
+   ```sql
+   -- YOUR CODE 
+   ```
+
+#### Step 3: Perform Data Transformations using `INSERT INTO`
+
+1. **Challenge 1: Create a new table schema with only three columns and load data into it:**
+
+   - **Hint**: Select only three columns from the original dataset.
+
+   ```sql
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.SIMPLE_TAXI_DATA_JSON (
+       VENDORID NUMBER(38,0),
+       TRIP_DISTANCE FLOAT,
+       TOTAL_AMOUNT FLOAT
+   );
+   
+   INSERT INTO TECHCATALYST_DE.<YOURSCHEMA>.SIMPLE_TAXI_DATA_JSON
+   -- YOUR CODE
+   
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.SIMPLE_TAXI_DATA_CSV (
+       VENDORID NUMBER(38,0),
+       TRIP_DISTANCE FLOAT,
+       TOTAL_AMOUNT FLOAT
+   );
+   
+   INSERT INTO TECHCATALYST_DE.<YOURSCHEMA>.SIMPLE_TAXI_DATA_CSV
+   -- YOUR CODE
+   
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.SIMPLE_TAXI_DATA_PARQUET (
+       VENDORID NUMBER(38,0),
+       TRIP_DISTANCE FLOAT,
+       TOTAL_AMOUNT FLOAT
+   );
+   
+   INSERT INTO TECHCATALYST_DE.<YOURSCHEMA>.SIMPLE_TAXI_DATA_PARQUET
+   -- YOUR CODE
+   
+   ```
+
+2. **Challenge 2: Create a new table schema and perform data type transformation:**
+
+   - **Hint**: Convert the `tpep_pickup_datetime` and `tpep_dropoff_datetime` fields to a different format.
+
+     - Notice: `TOTAL_AMOUNT` you will need to calculate as summation of all fields: fare_amount, extra, tip_amount, tolls_amount, airport_fee
+
+     - Trip Duration is in Minutes 
+
+     - `TPEP_MONTH` and `TPEP_YEAR` are based on TPEP_PICKUP_DATETIME
+
+       
+
+   ```sql
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.SUMMARY_TAXI_DATA_JSON (
+       VENDORID NUMBER(38,0),
+       TPEP_PICKUP_DATETIME TIMESTAMP,
+       TPEP_DROPOFF_DATETIME TIMESTAMP,
+     	TPEP_MONTH NUMBER,
+       TPEP_YEAR NUMBER,
+   	  TPEP_IS_WEEKEND STRING,
+       PASSENGER_COUNT NUMBER(38,0),
+       TRIP_DURATION_MINUTES FLOAT,
+       TOTAL_AMOUNT FLOAT
+   );
+   
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.SUMMARY_TAXI_DATA_CSV (
+       VENDORID NUMBER(38,0),
+       TPEP_PICKUP_DATETIME TIMESTAMP,
+       TPEP_DROPOFF_DATETIME TIMESTAMP,
+     	TPEP_MONTH NUMBER,
+       TPEP_YEAR NUMBER,
+   	  TPEP_IS_WEEKEND STRING,
+       PASSENGER_COUNT NUMBER(38,0),
+       TRIP_DURATION_MINUTES FLOAT,
+       TOTAL_AMOUNT FLOAT
+   );
+   
+   
+   CREATE OR REPLACE TRANSIENT TABLE TECHCATALYST_DE.<YOURSCHEMA>.SUMMARY_TAXI_DATA_PARQUET (
+       VENDORID NUMBER(38,0),
+       TPEP_PICKUP_DATETIME TIMESTAMP,
+       TPEP_DROPOFF_DATETIME TIMESTAMP,
+     	TPEP_MONTH NUMBER,
+       TPEP_YEAR NUMBER,
+   	  TPEP_IS_WEEKEND STRING,
+       PASSENGER_COUNT NUMBER(38,0),
+       TRIP_DURATION_MINUTES FLOAT,
+       TOTAL_AMOUNT FLOAT
+   );
+   
+   
+   INSERT INTO TECHCATALYST_DE.<YOURSCHEMA>.SUMMARY_TAXI_DATA_JSON
+   -- YOUR CODE
+   
+   
+   INSERT INTO TECHCATALYST_DE.<YOURSCHEMA>.SUMMARY_TAXI_DATA_PARQUET
+   -- YOUR CODE
+   
+   
+   INSERT INTO TECHCATALYST_DE.<YOURSCHEMA>.SUMMARY_TAXI_DATA_CSV
+   -- YOUR CODE
+   
+   
+   ```
+
+   
